@@ -1,8 +1,8 @@
-﻿# v064 Assignment — C1 Common Landmark + Mirror
+# v064 Assignment — C1 Common Landmark + Mirror
 
-Project: chal-kak
-Track: chal-pose
-Task: v064-c1-landmark
+Project ID: chal-kak
+Track ID: chal-pose
+Task ID: v064-c1-landmark
 Plan: docs/CONTROL_PLANE_PILOT_V064.md
 
 ## Goal
