@@ -1,0 +1,30 @@
+﻿:root {
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #111;
+  color: #fff;
+}
+
+.camera-shell {
+  width: min(100% - 2rem, 32rem);
+  margin: 0 auto;
+  padding: 1rem 0 2rem;
+}
+
+#camera-preview {
+  display: block;
+  width: 100%;
+  min-height: 18rem;
+  margin: 1rem 0;
+  background: #222;
+  object-fit: cover;
+}
+
+button {
+  width: 100%;
+  min-height: 3rem;
+  font: inherit;
+}

@@ -1,0 +1,39 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>찰칵 카메라 파일럿</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="camera-shell">
+    <h1>찰칵</h1>
+    <p>브라우저 카메라 연결 상태를 확인하는 v064 파일럿 화면입니다.</p>
+    <video id="camera-preview" playsinline muted></video>
+    <button id="camera-start" type="button">카메라 시작</button>
+    <p id="camera-status" role="status">대기 중</p>
+  </main>
+
+  <script type="module">
+    import { startCamera } from "../src/camera/camera.mjs";
+
+    const video = document.querySelector("#camera-preview");
+    const button = document.querySelector("#camera-start");
+    const status = document.querySelector("#camera-status");
+
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      status.textContent = "카메라 연결 중";
+      try {
+        await startCamera(video);
+        status.textContent = "카메라 연결됨";
+      } catch (error) {
+        status.textContent = "카메라를 사용할 수 없습니다";
+        button.disabled = false;
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
