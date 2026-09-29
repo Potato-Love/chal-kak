@@ -1,8 +1,8 @@
-﻿# v064 Assignment — B1 Pose Pair Integration Validator
+# v064 Assignment — B1 Pose Pair Integration Validator
 
-Project: chal-kak
-Track: chal-integration
-Task: v064-b1-pose-pair
+Project ID: chal-kak
+Track ID: chal-integration
+Task ID: v064-b1-pose-pair
 Plan: docs/CONTROL_PLANE_PILOT_V064.md
 
 ## Goal
