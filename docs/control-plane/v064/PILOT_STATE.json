@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "project_id": "chal-kak",
+  "repository": "Potato-Love/chal-kak",
+  "pilot_branch": "pilot/v064-bootstrap",
+  "baseline_commit": "a81a8e77ad61ab6889f6a8f81777e8345dace8f8",
+  "plan_commit": "7ed34d44b7f8ae62cd6fa0541ad17d0492ab22ed",
+  "tracks": [
+    {
+      "track_id": "chal-frontend",
+      "task_id": "v064-a1-camera-ui",
+      "assignment_commit": "8ae8b2a5a2f243d56a64a2c143033b2712fa8906",
+      "state": "WORK_DONE",
+      "candidate_commit": "06b20c5c779e2283b9b2356fb70d7c63b6cb2a7c",
+      "branch": "pilot/v064-a1-camera",
+      "blocker": null,
+      "next_action": "HEAD decision",
+      "tests": {
+        "runner": "node --test tests/camera.test.mjs",
+        "passed": 4,
+        "failed": 0
+      }
+    },
+    {
+      "track_id": "chal-pose",
+      "task_id": "v064-c1-landmark",
+      "assignment_commit": "6492ab47677653c968a4364e6f7226898ec5254a",
+      "state": "WORK_DONE",
+      "candidate_commit": "d3130b46765b27399a7ace35625de0e22a1e6590",
+      "branch": "pilot/v064-c1-landmark",
+      "blocker": null,
+      "next_action": "HEAD decision",
+      "tests": {
+        "runner": "node --test tests/landmarks.test.mjs",
+        "passed": 4,
+        "failed": 0
+      }
+    },
+    {
+      "track_id": "chal-integration",
+      "task_id": "v064-b1-pose-pair",
+      "assignment_commit": "e05f4352401ba492c457ffe5629b981cf381d350",
+      "state": "BLOCKED",
+      "candidate_commit": null,
+      "branch": "pilot/v064-b1-pose-pair",
+      "blocker": "C1 requires explicit HEAD acceptance before B1 may execute",
+      "next_action": "HEAD decision",
+      "tests": null
+    },
+    {
+      "track_id": "chal-frontend",
+      "task_id": "v064-a2-readiness-ui",
+      "assignment_commit": "b81e283da97eb98119e1606238c53432bbe6fd5c",
+      "state": "READY",
+      "candidate_commit": null,
+      "branch": null,
+      "blocker": "A1 and B1 require explicit HEAD acceptance before dispatch",
+      "next_action": "wait for dependency decisions",
+      "tests": null
+    }
+  ],
+  "dependency_graph": [
+    "v064-c1-landmark -> v064-b1-pose-pair -> v064-a2-readiness-ui",
+    "v064-a1-camera-ui -> v064-a2-readiness-ui"
+  ],
+  "execution_policy": {
+    "local_ai_control_attempted": true,
+    "local_ai_control_result": "gateway unavailable: tunnel-client did not poll",
+    "fallback_used": "Remote Desktop Commander",
+    "fallback_reason": "LocalAIControl unavailable on current online development machine/session",
+    "main_mutated": false
+  },
+  "head_decision_required": true
+}
