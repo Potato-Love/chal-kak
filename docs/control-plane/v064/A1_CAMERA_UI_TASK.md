@@ -1,8 +1,8 @@
-﻿# v064 Assignment — A1 Browser Camera Boundary
+# v064 Assignment ??A1 Browser Camera Boundary
 
-Project: chal-kak
-Track: chal-frontend
-Task: v064-a1-camera-ui
+Project ID: chal-kak
+Track ID: chal-frontend
+Task ID: v064-a1-camera-ui
 Plan: docs/CONTROL_PLANE_PILOT_V064.md
 
 ## Goal
