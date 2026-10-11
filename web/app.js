@@ -2,11 +2,56 @@ import {
     FilesetResolver,
     PoseLandmarker,
     DrawingUtils
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1";
+
+console.log("APP START");
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("overlay");
 const cameraContainer = document.querySelector(".camera-container");
+
+const referenceScreen =
+    document.getElementById("referenceScreen");
+
+const referencePreview =
+    document.getElementById("referencePreview");
+
+const referenceNumber =
+    document.getElementById("referenceNumber");
+
+const referenceThumbnails =
+    document.getElementById("referenceThumbnails");
+
+const prevReferenceButton =
+    document.getElementById("prevReferenceButton");
+
+const nextReferenceButton =
+    document.getElementById("nextReferenceButton");
+
+const selectReferenceButton =
+    document.getElementById("selectReferenceButton");
+
+const backToReferenceButton =
+    document.getElementById("backToReferenceButton");
+
+const captureButton =
+    document.getElementById("captureButton");
+
+const capturePreviewScreen =
+    document.getElementById("capturePreviewScreen");
+
+const capturedImage =
+    document.getElementById("capturedImage");
+
+const retakeButton =
+    document.getElementById("retakeButton");
+
+const savePhotoButton =
+    document.getElementById("savePhotoButton");
+
+const mirrorButton =
+    document.getElementById("mirrorButton");
+
 const ctx = canvas.getContext("2d");
 const drawingUtils = new DrawingUtils(ctx);
 
@@ -16,21 +61,50 @@ let referenceData;
 
 let currentFacingMode = "environment";
 let currentStream = null;
+let predictionStarted = false;
 
-const referenceFiles = [
-    "reference_01.json",
-    "reference_02.json"
+const referenceItems = [
+    {
+        name: "Reference 01",
+        image: "../reference_01.jpg",
+        json: "reference_01.json"
+    },
+    {
+        name: "Reference 02",
+        image: "../reference_02.jpg",
+        json: "reference_02.json"
+    },
+    {
+        name: "Reference 03",
+        image: "../reference_03.jpg",
+        json: "reference_03.json"
+    },
+    {
+        name: "Reference 04",
+        image: "../reference_04.jpg",
+        json: "reference_04.json"
+    }
 ];
 
 let targetPoints = {};
 let targetComposition = {};
 
 let currentReferenceIndex = 0;
+let previewReferenceIndex = 0;
+
+let swipeStartX = null;
+let swipeStartY = null;
+
+const swipeThreshold = 50;
+
+let isReferenceAnimating = false;
 
 let smoothedPoints = {};
 const smoothingFactor = 0.3;
 const visibilityThreshold = 0.5;
 let overallMatched = false;
+
+let capturedImageData = null;
 
 const connections = [
     [11, 12],
@@ -44,8 +118,9 @@ const connections = [
 
 async function createPoseLandmarker() {
     const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm"
     );
+
 
     poseLandmarker = await PoseLandmarker.createFromOptions(
         vision,
@@ -71,7 +146,7 @@ async function loadReference(fileName) {
 async function loadReferenceByIndex(index) {
     if (
         index < 0 ||
-        index >= referenceFiles.length
+        index >= referenceItems.length
     ) {
         return;
     }
@@ -79,9 +154,320 @@ async function loadReferenceByIndex(index) {
     currentReferenceIndex = index;
 
     await loadReference(
-        referenceFiles[currentReferenceIndex]
+        referenceItems[currentReferenceIndex].json
     );
 }
+
+function createReferenceThumbnails() {
+
+    referenceThumbnails.innerHTML = "";
+
+    referenceItems.forEach((reference, index) => {
+
+        const button =
+            document.createElement("button");
+
+        button.type = "button";
+        button.className =
+            "reference-thumbnail";
+
+        const image =
+            document.createElement("img");
+
+        image.src =
+            reference.image;
+
+        image.alt =
+            reference.name;
+
+        button.appendChild(image);
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                if (
+                    index ===
+                    previewReferenceIndex
+                ) {
+                    return;
+                }
+
+                const direction =
+                    index >
+                        previewReferenceIndex
+                        ? "next"
+                        : "prev";
+
+                showReference(
+                    index,
+                    direction
+                );
+            }
+        );
+
+        referenceThumbnails.appendChild(
+            button
+        );
+    });
+}
+
+function updateReferencePreview() {
+
+    const reference =
+        referenceItems[previewReferenceIndex];
+
+    referencePreview.src =
+        reference.image;
+
+    referenceNumber.textContent =
+        reference.name;
+
+    const thumbnails =
+        document.querySelectorAll(
+            ".reference-thumbnail"
+        );
+
+    thumbnails.forEach(
+        (thumbnail, index) => {
+
+            thumbnail.classList.toggle(
+                "active",
+                index === previewReferenceIndex
+            );
+        }
+    );
+
+    const activeThumbnail =
+        thumbnails[previewReferenceIndex];
+
+    if (activeThumbnail) {
+
+        activeThumbnail.scrollIntoView({
+            behavior: "smooth",
+            inline: "center",
+            block: "nearest"
+        });
+    }
+}
+
+function getNextReferenceIndex(direction) {
+
+    if (direction === "next") {
+
+        return (
+            previewReferenceIndex + 1
+        ) % referenceItems.length;
+    }
+
+    return (
+        previewReferenceIndex -
+        1 +
+        referenceItems.length
+    ) % referenceItems.length;
+}
+
+async function showReference(
+    nextIndex,
+    direction
+) {
+
+    if (
+        isReferenceAnimating ||
+        nextIndex === previewReferenceIndex
+    ) {
+        return;
+    }
+
+    isReferenceAnimating = true;
+
+    const outX =
+        direction === "next"
+            ? -40
+            : 40;
+
+    const inX =
+        direction === "next"
+            ? 40
+            : -40;
+
+
+    const outAnimation =
+        referencePreview.animate(
+            [
+                {
+                    opacity: 1,
+                    transform: "translateX(0)"
+                },
+                {
+                    opacity: 0,
+                    transform:
+                        `translateX(${outX}px)`
+                }
+            ],
+            {
+                duration: 130,
+                easing: "ease-in",
+                fill: "forwards"
+            }
+        );
+
+    await outAnimation.finished;
+
+
+    previewReferenceIndex = nextIndex;
+
+    updateReferencePreview();
+
+
+    const inAnimation =
+        referencePreview.animate(
+            [
+                {
+                    opacity: 0,
+                    transform:
+                        `translateX(${inX}px)`
+                },
+                {
+                    opacity: 1,
+                    transform: "translateX(0)"
+                }
+            ],
+            {
+                duration: 180,
+                easing: "ease-out",
+                fill: "forwards"
+            }
+        );
+
+    await inAnimation.finished;
+
+
+    outAnimation.cancel();
+    inAnimation.cancel();
+
+    isReferenceAnimating = false;
+}
+
+referencePreview.addEventListener(
+    "pointerdown",
+    (event) => {
+
+        swipeStartX = event.clientX;
+        swipeStartY = event.clientY;
+
+        referencePreview.setPointerCapture(
+            event.pointerId
+        );
+    }
+);
+
+referencePreview.addEventListener(
+    "pointerup",
+    (event) => {
+
+        if (
+            swipeStartX === null ||
+            swipeStartY === null
+        ) {
+            return;
+        }
+
+        const deltaX =
+            event.clientX - swipeStartX;
+
+        const deltaY =
+            event.clientY - swipeStartY;
+
+        swipeStartX = null;
+        swipeStartY = null;
+
+        if (
+            Math.abs(deltaX) < swipeThreshold ||
+            Math.abs(deltaX) <= Math.abs(deltaY)
+        ) {
+            return;
+        }
+
+        if (deltaX < 0) {
+
+            const nextIndex =
+                getNextReferenceIndex("next");
+
+            showReference(
+                nextIndex,
+                "next"
+            );
+        }
+
+        else {
+
+            const nextIndex =
+                getNextReferenceIndex("prev");
+
+            showReference(
+                nextIndex,
+                "prev"
+            );
+        }
+    }
+);
+
+referencePreview.addEventListener(
+    "pointercancel",
+    () => {
+        swipeStartX = null;
+        swipeStartY = null;
+    }
+);
+
+prevReferenceButton.addEventListener(
+    "click",
+    () => {
+
+        const nextIndex =
+            getNextReferenceIndex("prev");
+
+        showReference(
+            nextIndex,
+            "prev"
+        );
+    }
+);
+nextReferenceButton.addEventListener(
+    "click",
+    () => {
+
+        const nextIndex =
+            getNextReferenceIndex("next");
+
+        showReference(
+            nextIndex,
+            "next"
+        );
+    }
+);
+
+console.log(
+    "BEFORE SELECT LISTENER",
+    selectReferenceButton
+);
+
+selectReferenceButton.addEventListener(
+    "click",
+    async () => {
+
+        await loadReferenceByIndex(
+            previewReferenceIndex
+        );
+
+        referenceScreen.style.display = "none";
+
+        await startCamera();
+    }
+);
+
+console.log("SELECT LISTENER REGISTERED");
 
 function drawTargetSkeleton() {
     if (!referenceData) {
@@ -190,7 +576,7 @@ function drawCompositionGuide(
     ctx.lineWidth = 2;
 
 
-    // Top Left
+    // Top Leftedictweb
     ctx.strokeStyle = topColor;
     ctx.beginPath();
     ctx.moveTo(left, top);
@@ -290,8 +676,18 @@ function predictWebcam() {
         return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    if (!poseLandmarker) {
+        console.error("PoseLandmarker is not initialized");
+        return;
+    }
+
+    if (
+        canvas.width !== video.videoWidth ||
+        canvas.height !== video.videoHeight
+    ) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+    }
 
     if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
@@ -301,12 +697,16 @@ function predictWebcam() {
             performance.now()
         );
 
+        console.log("Landmarks detected:", results.landmarks.length);
+
         ctx.clearRect(
             0,
             0,
             canvas.width,
             canvas.height
         );
+
+        overallMatched = false;
 
         drawTargetSkeleton();
 
@@ -329,44 +729,44 @@ function predictWebcam() {
 
                 const currentPoints = {};
 
-            for (let index = 0; index < 33; index++) {
+                for (let index = 0; index < 33; index++) {
 
-                const newX =
-                    landmarks[index].x * canvas.width;
+                    const newX =
+                        landmarks[index].x * canvas.width;
 
-                const newY =
-                    landmarks[index].y * canvas.height;
+                    const newY =
+                        landmarks[index].y * canvas.height;
 
-                let smoothX;
-                let smoothY;
+                    let smoothX;
+                    let smoothY;
 
-                if (!smoothedPoints[index]) {
-                    smoothX = newX;
-                    smoothY = newY;
+                    if (!smoothedPoints[index]) {
+                        smoothX = newX;
+                        smoothY = newY;
+                    }
+
+                    else {
+                        smoothX =
+                            smoothedPoints[index].x *
+                            (1 - smoothingFactor) +
+                            newX * smoothingFactor;
+
+                        smoothY =
+                            smoothedPoints[index].y *
+                            (1 - smoothingFactor) +
+                            newY * smoothingFactor;
+                    }
+
+                    smoothedPoints[index] = {
+                        x: smoothX,
+                        y: smoothY
+                    };
+
+                    currentPoints[index] = {
+                        x: smoothX,
+                        y: smoothY
+                    };
                 }
-
-                else {
-                    smoothX =
-                        smoothedPoints[index].x *
-                        (1 - smoothingFactor) +
-                        newX * smoothingFactor;
-
-                    smoothY =
-                        smoothedPoints[index].y *
-                        (1 - smoothingFactor) +
-                        newY * smoothingFactor;
-                }
-
-                smoothedPoints[index] = {
-                    x: smoothX,
-                    y: smoothY
-                };
-
-                currentPoints[index] = {
-                    x: smoothX,
-                    y: smoothY
-                };
-            }
 
                 const currentXValues = [];
                 const currentYValues = [];
@@ -649,7 +1049,7 @@ function predictWebcam() {
                     targetLeftLowerLegAngle
                 );
 
-               const leftThighMatched =
+                const leftThighMatched =
                     leftThighVisible &&
                     leftHipDiff <= jointAngleTolerance &&
                     leftThighDiff <= segmentAngleTolerance;
@@ -750,14 +1150,19 @@ function predictWebcam() {
                     rightMatched &&
                     topMatched &&
                     bottomMatched;
- 
+
                 overallMatched =
                     allPoseMatched &&
                     compositionMatched;
 
-                    if (overallMatched) {
-                        console.log("OVERALL MATCH");
-                    }
+                if (overallMatched) {
+                    console.log("OVERALL MATCH");
+                }
+
+                captureButton.classList.toggle(
+                    "matched",
+                    overallMatched
+                );
 
                 // =========================
                 // DRAW CURRENT SKELETON
@@ -897,49 +1302,174 @@ function predictWebcam() {
         }
     }
 
+    if (!overallMatched) {
+        captureButton.classList.remove("matched");
+    }
+
     requestAnimationFrame(predictWebcam);
 }
 
-function capturePhoto() {
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
+function showCaptureFlash() {
+
+    if (!captureFlash) {
         return;
     }
 
-    const captureCanvas = document.createElement("canvas");
-    const captureContext = captureCanvas.getContext("2d");
+    captureFlash.classList.add("active");
 
-    captureCanvas.width = video.videoWidth;
-    captureCanvas.height = video.videoHeight;
+    setTimeout(() => {
+        captureFlash.classList.remove("active");
+    }, 120);
+}
 
-    captureContext.drawImage(
-        video,
-        0,
-        0,
-        captureCanvas.width,
-        captureCanvas.height
-    );
+function capturePhoto() {
 
-    const imageData = captureCanvas.toDataURL(
-        "image/jpeg",
-        0.95
-    );
+    if (
+        video.videoWidth === 0 ||
+        video.videoHeight === 0
+    ) {
+        return;
+    }
 
-    const link = document.createElement("a");
+    showCaptureFlash();
 
-    link.href = imageData;
-    link.download = `photo-guide-${Date.now()}.jpg`;
+    const captureCanvas =
+        document.createElement("canvas");
+
+    const captureContext =
+        captureCanvas.getContext("2d");
+
+    captureCanvas.width =
+        video.videoWidth;
+
+    captureCanvas.height =
+        video.videoHeight;
+
+    const isMirrored =
+        cameraContainer.classList.contains("mirror");
+
+    if (isMirrored) {
+
+        captureContext.save();
+
+        captureContext.translate(
+            captureCanvas.width,
+            0
+        );
+
+        captureContext.scale(
+            -1,
+            1
+        );
+
+        captureContext.drawImage(
+            video,
+            0,
+            0,
+            captureCanvas.width,
+            captureCanvas.height
+        );
+
+        captureContext.restore();
+    }
+
+    else {
+
+        captureContext.drawImage(
+            video,
+            0,
+            0,
+            captureCanvas.width,
+            captureCanvas.height
+        );
+    }
+
+    capturedImageData =
+        captureCanvas.toDataURL(
+            "image/jpeg",
+            0.95
+        );
+
+    capturedImage.src =
+        capturedImageData;
+
+    capturePreviewScreen.style.display =
+        "flex";
+
+    console.log("Photo captured");
+}
+
+function closeCapturePreview() {
+
+    capturePreviewScreen.style.display =
+        "none";
+
+    capturedImage.src = "";
+
+    capturedImageData = null;
+}
+
+function saveCapturedPhoto() {
+
+    if (!capturedImageData) {
+        return;
+    }
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        capturedImageData;
+
+    link.download =
+        `photo-guide-${Date.now()}.jpg`;
 
     link.click();
 
-    console.log("Photo captured");
+    closeCapturePreview();
+
+    console.log("Photo saved");
+}
+
+function setMirrorState(isMirror) {
+
+    cameraContainer.classList.toggle(
+        "mirror",
+        isMirror
+    );
+
+    mirrorButton.classList.toggle(
+        "active",
+        isMirror
+    );
+
+    mirrorButton.setAttribute(
+        "aria-pressed",
+        isMirror
+    );
+}
+
+function toggleMirror() {
+
+    const isMirror =
+        cameraContainer.classList.toggle("mirror");
+
+    mirrorButton.classList.toggle(
+        "active",
+        isMirror
+    );
+
+    mirrorButton.setAttribute(
+        "aria-pressed",
+        isMirror
+    );
 }
 
 document.addEventListener("keydown", async (event) => {
 
     const key = event.key.toLowerCase();
-
     if (key === "m") {
-        cameraContainer.classList.toggle("mirror");
+        toggleMirror();
     }
 
     else if (key === "1") {
@@ -949,7 +1479,7 @@ document.addEventListener("keydown", async (event) => {
     else if (key === "2") {
         await loadReferenceByIndex(1);
     }
-    
+
     else if (key === "c") {
         capturePhoto();
     }
@@ -975,12 +1505,14 @@ async function startCamera() {
 
         // 카메라 영상이 준비되면 Pose 추론 시작
         video.onloadeddata = () => {
-            predictWebcam();
+            if (!predictionStarted) {
+                predictionStarted = true;
+                predictWebcam();
+            }
         };
 
         console.log(
-            `Camera started: ${
-                currentFacingMode === "environment" ? "rear" : "front"
+            `Camera started: ${currentFacingMode === "environment" ? "rear" : "front"
             }`
         );
 
@@ -990,14 +1522,82 @@ async function startCamera() {
 }
 
 async function switchCamera() {
+
     currentFacingMode =
         currentFacingMode === "environment"
             ? "user"
             : "environment";
 
+    const shouldMirror =
+        currentFacingMode === "user";
+
+    setMirrorState(shouldMirror);
+
     await startCamera();
 }
 
+const switchCameraButton =
+    document.getElementById("switchCameraButton");
+
+switchCameraButton.addEventListener("click", async () => {
+    await switchCamera();
+});
+
+mirrorButton.addEventListener(
+    "click",
+    () => {
+        toggleMirror();
+    }
+);
+
+backToReferenceButton.addEventListener(
+    "click",
+    () => {
+
+        if (currentStream) {
+            currentStream
+                .getTracks()
+                .forEach(track => track.stop());
+
+            currentStream = null;
+        }
+
+        video.srcObject = null;
+
+        smoothedPoints = {};
+
+        previewReferenceIndex =
+            currentReferenceIndex;
+
+        updateReferencePreview();
+
+        referenceScreen.style.display = "flex";
+    }
+);
+
+captureButton.addEventListener(
+    "click",
+    () => {
+        capturePhoto();
+    }
+);
+
+retakeButton.addEventListener(
+    "click",
+    () => {
+        closeCapturePreview();
+    }
+);
+
+savePhotoButton.addEventListener(
+    "click",
+    () => {
+        saveCapturedPhoto();
+    }
+);
+
 await createPoseLandmarker();
-await loadReferenceByIndex(0);
-startCamera();
+
+createReferenceThumbnails();
+
+updateReferencePreview();
