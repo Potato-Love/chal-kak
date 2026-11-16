@@ -124,4 +124,15 @@ Far → Near → Matched
 - Composition Matching
 - Guide / Overlay
 
-실제 디렉터리 구조는 Frontend Framework를 선택한 뒤 확정한다.
+Next.js App Router를 기준으로 다음 디렉터리 구조를 사용한다.
+
+- `src/app/`: 페이지와 라우팅. `camera`, `gallery`에는 기본 페이지를 두고, `references`, `share`는 후속 구현을 위한 폴더로 유지한다.
+- `src/components/ui/`, `src/components/layout/`: 공통 UI와 레이아웃 컴포넌트.
+- `src/features/`: `camera`, `pose`, `composition`, `guidance`, `capture`, `reference`, `gallery`, `auth`, `sharing`별 기능 구현.
+- `src/lib/mediapipe/`, `src/lib/supabase/`: 외부 도구 연동 코드 위치.
+- `src/types/pose.ts`: Reference Pose와 Current Pose가 공유할 타입 정의 위치. 현재는 인터페이스 확정 전의 빈 모듈이다.
+- `public/models/`: 브라우저에서 사용하는 모델 파일 위치.
+- `supabase/migrations/`: 향후 필요 시 사용할 마이그레이션 파일 위치.
+- `tests/`: 테스트 코드 위치.
+
+빈 폴더는 `.gitkeep`으로 Git에 보존한다. `auth`, `sharing`, Supabase 관련 폴더는 구조만 준비하며, 인증·공유·데이터베이스 기능이나 외부 서비스 연결을 추가한 것은 아니다. 현재 MVP 범위는 그대로 유지한다.
