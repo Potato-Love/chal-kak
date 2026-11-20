@@ -1,94 +1,147 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#243450">
     <title>Photo Guide</title>
-
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.0.1">
 </head>
-
 <body>
-
-    <h1>Photo Guide</h1>
-
-    <div id="referenceScreen" class="reference-screen">
-
-        <h2>Reference 선택</h2>
-
-        <div class="reference-viewer">
-
-            <button id="prevReferenceButton" type="button">
-                ‹
-            </button>
-
-            <img id="referencePreview" src="../reference_01.jpg" alt="Reference Preview">
-
-            <button id="nextReferenceButton" type="button">
-                ›
-            </button>
-
-        </div>
-
-        <div id="referenceThumbnails" class="reference-thumbnails"></div>
-
-        <p id="referenceNumber">
-            Reference 01
-        </p>
-
-        <button id="selectReferenceButton" type="button">
-            선택
-        </button>
-
-    </div>
-
-    <div class="camera-container">
-
+<main class="camera-container" aria-label="Photo Guide 카메라">
         <video id="video" autoplay playsinline muted></video>
-
         <canvas id="overlay"></canvas>
+        <div class="camera-scrim camera-scrim-top"></div>
+        <div class="camera-scrim camera-scrim-bottom"></div>
 
-    </div>
-
-    <div id="captureFlash"></div>
-
-    <div id="capturePreviewScreen" class="capture-preview-screen">
-
-        <img id="capturedImage" alt="촬영 결과">
-
-        <div class="capture-preview-controls">
-
-            <button id="retakeButton" type="button">
-                다시 촬영
+        <header class="camera-header">
+            <div class="header-spacer" aria-hidden="true"></div>
+            <button id="settingsButton" class="icon-button camera-settings-button" type="button" aria-label="설정 열기">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05-2.78 2.78-.05-.05A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1.08 1.65V21h-3.84v-.07A1.8 1.8 0 0 0 9 19.4a1.8 1.8 0 0 0-1.98.36l-.05.05-2.78-2.78.05-.05A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.08H3v-3.84h.07A1.8 1.8 0 0 0 4.6 9a1.8 1.8 0 0 0-.36-1.98l-.05-.05 2.78-2.78.05.05A1.8 1.8 0 0 0 9 4.6a1.8 1.8 0 0 0 1.08-1.65V3h3.84v.07A1.8 1.8 0 0 0 15 4.6a1.8 1.8 0 0 0 1.98-.36l.05-.05 2.78 2.78-.05.05A1.8 1.8 0 0 0 19.4 9a1.8 1.8 0 0 0 1.65 1.08H21v3.84h-.07A1.8 1.8 0 0 0 19.4 15Z"/></svg>
             </button>
+        </header>
 
-            <button id="savePhotoButton" type="button">
-                저장
+        <div id="guideDrawer" class="guide-drawer" aria-label="촬영 보조 도구 서랍">
+            <nav id="guideToolbar" class="guide-toolbar" aria-label="촬영 보조 도구" aria-hidden="true">
+                <button class="guide-tool is-active" type="button" data-guide-tool="pose" aria-pressed="true">
+                    <svg class="ui-icon pose-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2.2"/><path d="M12 7v6M12 9l-4.5 3M12 9l4 2.5M12 13l-3 7M12 13l4 6"/></svg>
+                    <span>포즈</span>
+                </button>
+                <button class="guide-tool is-active" type="button" data-guide-tool="composition" aria-pressed="true">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V5h3M16 5h3v3M19 16v3h-3M8 19H5v-3"/><path d="M8 12h8M12 8v8"/></svg>
+                    <span>구도</span>
+                </button>
+                <button class="guide-tool" type="button" data-guide-tool="face" aria-pressed="false">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M9 15c1.5 1.2 4.5 1.2 6 0"/></svg>
+                    <span>얼굴</span>
+                </button>
+                <button id="mirrorButton" class="guide-tool" type="button" aria-label="미러 모드" aria-pressed="false">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16"/><path d="M9 8H5l2-2M5 8l2 2"/><path d="M15 16h4l-2 2M19 16l-2-2"/></svg>
+                    <span>미러</span>
+                </button>
+            </nav>
+            <button id="guideDrawerHandle" class="guide-drawer-handle" type="button" aria-label="촬영 보조 도구 열기" aria-expanded="false" aria-controls="guideToolbar">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
             </button>
-
         </div>
 
-    </div>
+        <div id="cameraBottomDock" class="camera-bottom-dock">
+            <div id="referenceDockSlot" class="camera-dock-slot">
+                <button id="referenceLibraryButton" class="dock-action reference-button" type="button" aria-label="Reference 이미지 선택">
+                    <img id="referenceDockThumbnail" class="reference-dock-thumbnail" alt="" hidden>
+                    <svg class="ui-icon reference-placeholder" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+                <span>Reference</span>
+            </div>
+            <div id="captureDockSlot" class="camera-dock-slot capture-slot">
+                <button id="captureButton" type="button" aria-label="사진 촬영"><span class="capture-core"></span></button>
+                <span>촬영</span>
+            </div>
+            <div id="switchDockSlot" class="camera-dock-slot">
+                <button id="switchCameraButton" class="dock-action" type="button" aria-label="카메라 전환">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-3l-1.3-2H8.3L7 7H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M8 12a4 4 0 0 1 6.8-2.8L16 10.5"/><path d="M16 8v2.5h-2.5"/><path d="M16 12a4 4 0 0 1-6.8 2.8L8 13.5"/><path d="M8 16v-2.5h2.5"/></svg>
+                </button>
+                <span>전환</span>
+            </div>
+        </div>
 
-    <button id="backToReferenceButton" type="button" aria-label="Reference 선택으로 돌아가기">
-        ←
-    </button>
+        <section id="cameraStatusPanel" class="camera-status-panel" role="status" aria-live="polite">
+            <div class="camera-status-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></svg></div>
+            <p id="cameraStatusText"></p>
+            <button id="cameraRetryButton" class="primary-button compact-button" type="button" hidden>다시 시도</button>
+        </section>
+    </main>
 
-    <button id="mirrorButton" type="button" aria-label="미러 모드" aria-pressed="false">
-        ⇆
-    </button>
+    <section id="referenceScreen" class="reference-screen" aria-label="Reference Library" hidden>
+        <header class="screen-header">
+            <button id="referenceLibraryCloseButton" class="icon-button plain" type="button" aria-label="카메라로 돌아가기"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <h1>Reference Library</h1>
+            <button id="customReferenceAddButton" class="secondary-button" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>추가</span></button>
+            <input id="customReferenceFileInput" type="file" accept="image/*" hidden>
+        </header>
 
-    <button id="captureButton" type="button" aria-label="사진 촬영"></button>
+        <div class="library-filters" aria-label="Reference 필터">
+            <button class="filter-chip is-active" type="button">전체</button>
+            <button class="filter-chip" type="button">포즈</button>
+            <button class="filter-chip" type="button">전신</button>
+            <button class="filter-chip" type="button">상반신</button>
+            <button class="filter-chip" type="button">커스텀</button>
+        </div>
 
-    <button id="switchCameraButton" type="button" aria-label="카메라 전환">
-        ↻
-    </button>
+        <div id="customReferenceActionRow" class="library-status-row">
+            <div id="referenceLibraryStatus" class="reference-library-status" role="status" aria-live="polite" hidden></div>
+        </div>
 
-    <script type="module" src="app.js"></script>
+        <section class="reference-preview-card" aria-label="선택한 Reference 미리보기">
+            <button id="prevReferenceButton" class="preview-nav previous" type="button" aria-label="이전 Reference"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <img id="referencePreview" src="../reference_01.jpg" alt="Reference Preview">
+            <button id="nextReferenceButton" class="preview-nav next" type="button" aria-label="다음 Reference"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <div id="referenceNumber" class="reference-preview-label">Reference 01</div>
+        </section>
 
+        <div id="referenceThumbnails" class="reference-thumbnails" aria-label="Reference 목록"></div>
+        <button id="selectReferenceButton" class="primary-button library-select-button" type="button">선택하기</button>
+    </section>
+
+    <section id="capturePreviewScreen" class="capture-preview-screen" aria-label="촬영 결과" hidden>
+        <header class="screen-header review-header">
+            <button id="retakeTopButton" class="icon-button plain" type="button" aria-label="카메라로 돌아가기"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <h1>촬영 결과 분석</h1>
+            <span class="header-spacer"></span>
+        </header>
+        <div class="captured-image-wrap"><img id="capturedImage" alt="촬영 결과"></div>
+        <div class="capture-preview-controls">
+            <button id="retakeButton" class="secondary-button review-action" type="button">다시 촬영</button>
+            <button id="savePhotoButton" class="primary-button review-action" type="button"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span>저장</span></button>
+        </div>
+    </section>
+
+    <section id="settingsScreen" class="settings-screen" aria-label="설정" hidden>
+        <header class="screen-header">
+            <button id="settingsCloseButton" class="icon-button plain" type="button" aria-label="설정 닫기"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <h1>설정</h1><span class="header-spacer"></span>
+        </header>
+        <div class="settings-content">
+            <h2>가이드 설정</h2>
+            <div class="settings-group">
+                <button class="setting-row" type="button" data-setting-toggle aria-pressed="true"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.5"/><path d="M12 8v5"/><path d="m12 10-5 3"/><path d="m12 10 5 3"/><path d="m12 13-3 7"/><path d="m12 13 3 7"/></svg>포즈 가이드</span><i class="switch"></i></button>
+                <button class="setting-row" type="button" data-setting-toggle aria-pressed="true"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v13a2 2 0 0 0 2 2h11"/><path d="M3 8h13a2 2 0 0 1 2 2v11"/></svg>구도 가이드</span><i class="switch"></i></button>
+                <button class="setting-row" type="button" data-setting-toggle aria-pressed="false"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/><path d="M9 15c1.5 1.2 4.5 1.2 6 0"/></svg>얼굴 가이드</span><i class="switch"></i></button>
+            </div>
+            <h2>촬영 설정</h2>
+            <div class="settings-group">
+                <button class="setting-row" type="button" data-setting-toggle aria-pressed="true"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/><circle cx="12" cy="13" r="4"/></svg>자동 촬영</span><i class="switch"></i></button>
+                <div class="setting-row static-row"><span>카운트다운</span><strong>3초</strong></div>
+                <button id="voiceToggleButton" class="setting-row" type="button" aria-pressed="true"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.5 8.5H3v7h3.5L11 19V5Z"/><path d="M15 9.5a4 4 0 0 1 0 5"/><path d="M17.8 6.8a8 8 0 0 1 0 10.4"/></svg>음성 안내</span><i class="switch"></i></button>
+                <div class="setting-row static-row"><span>안내 간격</span><strong>2초</strong></div>
+            </div>
+        </div>
+    </section>
+
+    <div id="captureFlash" class="capture-flash"></div>
+    <script type="module" src="app.js?v=1.0.1"></script>
 </body>
-
 </html>

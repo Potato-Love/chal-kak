@@ -1,0 +1,126 @@
+{
+    "schema_version": "1.0",
+    "profile_type": "adaptive_retargeted_pose",
+    "source": {
+        "reference_image": "reference_04.jpg",
+        "reference_schema_version": "2.1",
+        "user_body_profile_schema_version": "1.1"
+    },
+    "design": {
+        "reference_supplies": "pose directions, torso orientation, and composition intent",
+        "user_supplies": "body proportions from neutral calibration",
+        "normalized_torso_length": 1.0
+    },
+    "user_body_ratios_used": {
+        "shoulder_width": 0.7159040339985879,
+        "hip_width": 0.5097622739331839,
+        "upper_arm": 0.5050747150655742,
+        "forearm": 0.4282336992978974,
+        "thigh": 0.8670681718189119,
+        "lower_leg": 0.7937257533809281
+    },
+    "reference_pose_intent": {
+        "joint_angles_2d": {
+            "left_elbow": 88.99258016802168,
+            "right_elbow": 134.72387789905451,
+            "left_hip": 103.7284778508544,
+            "right_hip": 135.77043470471435,
+            "left_knee": 85.63852991483189,
+            "right_knee": 84.75027519869163
+        },
+        "screen_orientation_2d": {
+            "body_lean_angle": -3.278986258854431,
+            "shoulder_tilt_angle": 3.69138598645128,
+            "hip_tilt_angle": 3.270487923183566
+        },
+        "relative_depth_cues": {
+            "shoulder_depth_difference": -0.2550976797938347,
+            "hip_depth_difference": -0.2557728737592697
+        }
+    },
+    "retargeted_landmarks_3d": {
+        "11": {
+            "x": 0.30178836447111496,
+            "y": -0.9950116188582389,
+            "z": -0.19853250802526085
+        },
+        "12": {
+            "x": -0.35926028931952353,
+            "y": -1.0004189967268646,
+            "z": 0.07624744663231958
+        },
+        "13": {
+            "x": 0.3829572320061642,
+            "y": -0.5011956044945862,
+            "z": -0.2667807805282736
+        },
+        "14": {
+            "x": -0.49336690684212015,
+            "y": -0.5195866200654771,
+            "z": -0.000668796706656094
+        },
+        "15": {
+            "x": 0.0035750490951071967,
+            "y": -0.3542582386095795,
+            "z": -0.40043208434076516
+        },
+        "16": {
+            "x": -0.37135150197429323,
+            "y": -0.272647461670974,
+            "z": -0.32856724781723523
+        },
+        "23": {
+            "x": 0.1856010702301994,
+            "y": -0.019316039953747567,
+            "z": -0.17361891403672705
+        },
+        "24": {
+            "x": -0.1856010702301994,
+            "y": 0.019316039953747567,
+            "z": 0.17361891403672705
+        },
+        "25": {
+            "x": -0.43802623756752607,
+            "y": 0.13085178457811364,
+            "z": -0.7570105663816328
+        },
+        "26": {
+            "x": -0.5622321422039186,
+            "y": 0.7905866919838475,
+            "z": 0.2964921475840784
+        },
+        "27": {
+            "x": -0.10496902225431742,
+            "y": 0.8416443222271602,
+            "z": -0.6393354571598365
+        },
+        "28": {
+            "x": -0.029546546335675328,
+            "y": 0.9895635506770997,
+            "z": 0.8502563909577202
+        }
+    },
+    "derived_joint_angles_3d": {
+        "left_elbow": 103.60778998834944,
+        "right_elbow": 126.15139087261376,
+        "left_knee": 75.73197351771117,
+        "right_knee": 91.73874109205994
+    },
+    "composition_target": {
+        "center_x": 0.5246510207653046,
+        "center_y": 0.6569086611270905,
+        "width": 0.19756871461868286,
+        "height": 0.4038429856300354,
+        "bbox_area_ratio": 0.07978673957869731,
+        "horizontal_offset_from_center": 0.024651020765304565,
+        "vertical_offset_from_center": 0.15690866112709045,
+        "left_margin": 0.42586666345596313,
+        "right_margin": 0.376564621925354,
+        "headroom": 0.45498716831207275,
+        "footroom": 0.14116984605789185
+    },
+    "notes": {
+        "coordinate_system": "Normalized MediaPipe-like body coordinates; torso length = 1.0.",
+        "next_step": "Project this retargeted 3D skeleton into the live camera and compare the user's live pose against it."
+    }
+}

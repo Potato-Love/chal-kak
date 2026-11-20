@@ -1,41 +1,49 @@
-# 찰칵 (Chal-Kak)
+# Photo Guide
 
-찰칵은 사용자가 레퍼런스 인물 사진의 **포즈 또는 사진 전체 구도**를 따라 촬영할 수 있도록 돕는 모바일 웹 기반 촬영 보조 프로젝트입니다.
+모바일 웹 기반 Reference 사진 촬영 보조 프로토타입입니다.
 
-별도의 앱 설치 없이 스마트폰 웹 브라우저에서 사용하는 것을 기본 방향으로 합니다.
+## 실행
 
-## 사용 모드
+프로젝트 루트에서:
 
-### 포즈 따라하기
-레퍼런스 사진에서 사람의 자세만 추출해 따라 합니다.
-사진 속 사람의 화면 위치와 크기는 기본 포즈 판정에서 제외합니다.
+```bash
+python -m http.server 8001
+```
 
-### 사진 전체 따라찍기
-포즈에 더해 사람의 화면상 위치, 크기, 여백 등 구도 요소도 함께 비교합니다.
+PC 브라우저:
 
-즉, 사진 전체 따라찍기는 **Pose Matching + Composition Matching**으로 구성합니다.
+```text
+http://localhost:8001/web/
+```
 
-## 기본 기술 방향
-- Mobile Web
-- On-device MediaPipe
-- Smartphone Camera
-- JavaScript 또는 TypeScript
-- Canvas 등 Web Graphics
-- Git / GitHub
+Android USB 디버깅 테스트:
 
-핵심 포즈 분석은 스마트폰 브라우저에서 실행합니다.
-별도의 Python 분석 서버는 기본 아키텍처에 포함하지 않습니다.
-OpenCV 역시 필수 기술이 아니며 필요성이 확인될 경우 OpenCV.js 등을 검토합니다.
+```powershell
+cd "$env:LOCALAPPDATA\Android\Sdk\platform-tools"
+.\adb devices
+.\adb reverse tcp:8001 tcp:8001
+```
 
-## 문서
-- docs/PROJECT.md — 프로젝트 목표와 범위
-- docs/ARCHITECTURE.md — 시스템 구조
-- docs/TEAM_GUIDE.md — 팀원을 위한 쉬운 설명
-- docs/DEVELOPMENT.md — 개발 및 테스트 방법
-- docs/CONTRIBUTING.md — Git 협업 규칙
-- AGENTS.md — AI Coding Agent 기본 지침
+그 다음 휴대폰 Chrome에서:
 
-## 기본 개발 흐름
-GitHub Issue → 작업 Branch → 개발 → 실행/테스트 → Commit → Pull Request → Review → main
+```text
+http://localhost:8001/web/
+```
 
-특정 AI Coding Agent에 종속하지 않으며, 사람과 Agent 모두 GitHub의 코드와 문서를 공통 기준으로 사용합니다.
+## UI 원칙
+
+- Camera-first
+- Primary theme: `#243450`
+- 기본 카메라 화면에는 Reference / 촬영 / 전환만 상시 노출
+- 포즈 / 구도 / 얼굴 / 미러는 왼쪽 접이식 도구 메뉴에서 접근
+- 음성 Guidance 중심, 촬영 화면 자막 배너는 사용하지 않음
+- CSS `!important` 사용 금지
+- 인라인 스타일 대신 클래스 기반 상태 변경 사용
+
+## 주요 경로
+
+- `web/index.html`: 화면 구조
+- `web/style.css`: 전체 디자인 시스템 및 반응형 스타일
+- `web/app.js`: 카메라 / Reference / Guidance / Capture 상태 관리
+- `models/`: MediaPipe Pose 모델
+- `reference_*.jpg`, `reference_*.json`: 기본 Reference 데이터
