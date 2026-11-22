@@ -8,6 +8,23 @@ export const RUNTIME_STATES = Object.freeze({
     REVIEW: "REVIEW"
 });
 
+// Named predicates keep state transitions consistent across output policies.
+function isCameraState(state) {
+    return state === RUNTIME_STATES.CAMERA_GUIDANCE ||
+        state === RUNTIME_STATES.CAPTURE_COUNTDOWN ||
+        state === RUNTIME_STATES.REVIEW;
+}
+
+function isGuidanceState(state) {
+    return state === RUNTIME_STATES.CAMERA_GUIDANCE ||
+        state === RUNTIME_STATES.CAPTURE_COUNTDOWN;
+}
+
+function isInferencePausedState(state) {
+    return state === RUNTIME_STATES.REVIEW ||
+        state === RUNTIME_STATES.REFERENCE_LIBRARY;
+}
+
 export function deriveRuntimePolicy({
     state,
     hasReference = false,
@@ -18,14 +35,8 @@ export function deriveRuntimePolicy({
     autoShootArmed = false,
     guidanceEnabled = true
 } = {}) {
-    const cameraState =
-        state === RUNTIME_STATES.CAMERA_GUIDANCE ||
-        state === RUNTIME_STATES.CAPTURE_COUNTDOWN ||
-        state === RUNTIME_STATES.REVIEW;
-
-    const guidanceState =
-        state === RUNTIME_STATES.CAMERA_GUIDANCE ||
-        state === RUNTIME_STATES.CAPTURE_COUNTDOWN;
+    const cameraState = isCameraState(state);
+    const guidanceState = isGuidanceState(state);
 
     const cameraOn = Boolean(cameraState && streamLive);
     const poseOn = Boolean(
@@ -58,9 +69,7 @@ export function deriveRuntimePolicy({
         autoCaptureAllowed,
         shouldReleaseCamera:
             state === RUNTIME_STATES.REFERENCE_LIBRARY,
-        shouldPauseInference:
-            state === RUNTIME_STATES.REVIEW ||
-            state === RUNTIME_STATES.REFERENCE_LIBRARY,
+        shouldPauseInference: isInferencePausedState(state),
         canReviewAction:
             state === RUNTIME_STATES.REVIEW && !reviewLocked
     };

@@ -44,6 +44,25 @@ function statusFromLevel(level) {
     return "분석 불가";
 }
 
+// Shared result structure for missing or unusable matching inputs.
+function unavailableMatchResult(details) {
+    return {
+        level: "unknown",
+        status: statusFromLevel("unknown"),
+        hardMatched: false,
+        fairMatched: false,
+        maxRatio: null,
+        ...details
+    };
+}
+
+// Preserve the same good/fair/bad/unknown priority across both matchers.
+function classifyMatch(hardMatched, fairMatched, canClassifyAsBad) {
+    if (hardMatched) return "good";
+    if (fairMatched) return "fair";
+    return canClassifyAsBad ? "bad" : "unknown";
+}
+
 export function getLiveCompositionTolerance(referenceFrame) {
     const width = finite(referenceFrame?.width);
     const height = finite(referenceFrame?.height);
@@ -62,14 +81,7 @@ export function getLiveCompositionTolerance(referenceFrame) {
 export function evaluateCompositionSnapshot(snapshot) {
     const c = snapshot?.composition;
     if (!c) {
-        return {
-            level: "unknown",
-            status: "분석 불가",
-            hardMatched: false,
-            fairMatched: false,
-            maxRatio: null,
-            ratios: null
-        };
+        return unavailableMatchResult({ ratios: null });
     }
 
     const toleranceX =
@@ -95,14 +107,7 @@ export function evaluateCompositionSnapshot(snapshot) {
     ];
 
     if (values.some(v => !Number.isFinite(v)) || toleranceX <= 0 || toleranceY <= 0) {
-        return {
-            level: "unknown",
-            status: "분석 불가",
-            hardMatched: false,
-            fairMatched: false,
-            maxRatio: null,
-            ratios: null
-        };
+        return unavailableMatchResult({ ratios: null });
     }
 
     const ratios = {
@@ -124,10 +129,7 @@ export function evaluateCompositionSnapshot(snapshot) {
         valid &&
         maxRatio <= MATCH_POLICY.composition.fairMultiplier;
 
-    const level =
-        hardMatched ? "good" :
-        fairMatched ? "fair" :
-        valid ? "bad" : "unknown";
+    const level = classifyMatch(hardMatched, fairMatched, valid);
 
     return {
         level,
@@ -151,14 +153,7 @@ function poseToleranceFor(type, pose) {
 export function evaluatePoseSnapshot(snapshot) {
     const pose = snapshot?.pose;
     if (!pose) {
-        return {
-            level: "unknown",
-            status: "분석 불가",
-            hardMatched: false,
-            fairMatched: false,
-            maxRatio: null,
-            parts: []
-        };
+        return unavailableMatchResult({ parts: [] });
     }
 
     const errors = pose.errors ?? {};
@@ -233,10 +228,7 @@ export function evaluatePoseSnapshot(snapshot) {
         Number.isFinite(maxRatio) &&
         maxRatio <= MATCH_POLICY.pose.fairMultiplier;
 
-    const level =
-        hardMatched ? "good" :
-        fairMatched ? "fair" :
-        inputsComplete ? "bad" : "unknown";
+    const level = classifyMatch(hardMatched, fairMatched, inputsComplete);
 
     return {
         level,
