@@ -72,36 +72,73 @@ flowchart TB
 
 HCI/PD/DM은 물리적 서버 구분이 아니라 책임 구분이다. PD 중 인체 추론과 촬영은 브라우저에서 수행하고, 인증·공유 서비스 일부는 서버에서 수행한다.
 
-## 5. 권장 디렉터리 및 모듈 경계
+## 5. 디렉터리 및 모듈 경계
 
 ```text
-src/
-├── app/                          # 페이지 조합·서버 엔드포인트
-│   ├── page.tsx                   # / : Reference Library (첫 화면)
-│   ├── camera/page.tsx            # /camera : 유효한 Reference가 있을 때 촬영
-│   ├── review/page.tsx            # /review : 촬영 결과가 있을 때 Review
-│   ├── gallery/page.tsx
-│   └── share/[token]/page.tsx
-├── components/                   # 범용 UI
-├── features/
-│   ├── reference/                 # Library·선택·검증·분석·캐시·선택 상태
-│   ├── camera/                    # 권한·스트림·전후면 전환·표시 좌표
-│   ├── pose/                      # 변환·관절각/Segment·3D 보조
-│   ├── composition/               # Bounding Box / Frame 비교
-│   ├── orientation/               # 몸통·얼굴·눈 신뢰도
-│   ├── matching/                  # Match Policy / 결과 조합
-│   ├── guidance/                  # 행동 후보·One Cue·음성·Canvas
-│   ├── capture/                   # 수동·자동 촬영·결과 스냅샷·Review 진단
-│   ├── gallery/
-│   ├── sharing/
-│   └── auth/
-├── lib/
-│   ├── mediapipe/                # SDK 초기화와 출력 변환
-│   ├── local-storage/            # IndexedDB 접근 경계
-│   └── supabase/                 # browser/server 클라이언트 분리
-└── types/                        # 공통 계약
-supabase/migrations/             # DB 스키마 변경
+chal-kak/
+├── public/
+│   ├── models/                         # MediaPipe 모델 파일
+│   └── references/                     # 기본 레퍼런스 이미지
+├── src/
+│   ├── app/                            # Next.js 라우팅·페이지 조합
+│   │   ├── layout.tsx
+│   │   ├── page.tsx                    # / : Reference Library (첫 화면)
+│   │   ├── camera/page.tsx
+│   │   ├── review/page.tsx
+│   │   ├── gallery/page.tsx
+│   │   └── share/[token]/page.tsx
+│   ├── components/                     # 공통 UI
+│   │   ├── ui/
+│   │   └── layout/
+│   ├── features/                       # 기능별 구현
+│   │   ├── reference/
+│   │   │   ├── components/
+│   │   │   └── reference-validator.ts
+│   │   ├── camera/
+│   │   │   ├── components/
+│   │   │   └── camera-controller.ts
+│   │   ├── session/
+│   │   │   └── capture-session.ts
+│   │   ├── pose/
+│   │   │   ├── pose-matcher.ts
+│   │   │   └── body-local-3d-comparator.ts
+│   │   ├── composition/
+│   │   │   └── composition-matcher.ts
+│   │   ├── orientation/
+│   │   │   └── orientation-analyzer.ts
+│   │   ├── matching/
+│   │   │   └── match-policy.ts
+│   │   ├── guidance/
+│   │   │   ├── guidance-engine.ts
+│   │   │   ├── one-cue-controller.ts
+│   │   │   └── voice-guidance.ts
+│   │   ├── capture/
+│   │   │   ├── capture-controller.ts
+│   │   │   └── post-capture-diagnosis.ts
+│   │   ├── gallery/
+│   │   ├── sharing/
+│   │   └── auth/
+│   ├── lib/                            # 외부 기술 연동
+│   │   ├── mediapipe/
+│   │   ├── supabase/
+│   │   └── local-storage/
+│   └── types/                          # 공통 데이터 타입
+│       ├── pose.ts
+│       ├── reference.ts
+│       ├── matching.ts
+│       └── capture.ts
+├── supabase/
+│   └── migrations/
+├── tests/
+├── docs/
+├── AGENTS.md
+├── README.md
+├── package.json
+└── tsconfig.json
 ```
+
+빈 디렉터리는 `.gitkeep`으로 추적한다. 기능 모듈과 공통 타입의 빈 파일은 구현 위치를 확보하기 위한 스캐폴드이며, 파일 존재가 기능 완성을 의미하지 않는다.
+
 
 **라우팅과 상태의 소유권**
 
@@ -109,12 +146,12 @@ supabase/migrations/             # DB 스키마 변경
 - 사용자가 Reference를 선택하면 `ReferenceSelection`을 검증/활성화하고 `/camera`로 이동한다. 카메라 권한은 **CameraView가 진입한 뒤** 요청한다. 분석·검증 실패 시에는 이동하지 않는다.
 - `/camera`는 공통 촬영 세션에서 `activeReferenceId`, `captureMode`, 검증된 `ReferenceData`를 확인한다. 데이터가 없거나 무효하면 `/`로 돌려보낸다.
 - `/review`는 세션의 `CaptureResult`와 해당 Reference에 의존한다. 화면 전환 중 Blob/메타데이터를 유지하고, 새로고침으로 세션이 소실되었을 경우 Library로 안전하게 복귀한다.
-- 선택 정보는 React Context 또는 기능별 세션 저장소로 라우트 사이에서 전달한다. **IndexedDB에 보관한 Reference 목록·미리보기 캐시가 곧 활성 선택을 뜻하지는 않는다.**
+- `features/session/capture-session.ts`는 활성 Reference·촬영 모드·촬영 결과를 라우트 사이에서 일시 유지하는 책임을 갖는다. 선택 정보는 React Context 또는 세션 저장소로 전달한다. **IndexedDB에 보관한 Reference 목록·미리보기 캐시가 곧 활성 선택을 뜻하지는 않는다.**
 - Gallery와 공유 페이지는 촬영 세션과 독립적으로 접근하며, 각 리소스의 인증/공유 정책을 따른다.
 
 **의존성 규칙**
 
-- `app`은 페이지 조합과 라우팅을 담당하며 비교·판정 수식을 직접 갖지 않는다.
+- `app`은 페이지 조합과 라우팅을 담당하며 비교·판정 수식을 직접 갖지 않는다. 기능 전용 UI는 `features/<기능>/components`, 범용 UI는 `components/ui`와 `components/layout`에 둔다.
 - `features/pose`, `composition`, `matching`, `guidance`의 핵심 판단 로직은 React·DOM·Supabase를 몰라도 테스트할 수 있게 작성한다.
 - `lib/mediapipe`가 SDK의 랜드마크 반환 형식을 공통 프로젝트 타입으로 변환한다.
 - `VoiceOutput`, `OverlayRenderer`, `CameraStream` 등 외부 효과는 전용 어댑터에서 수행한다.
@@ -164,7 +201,7 @@ stateDiagram-v2
 | `GuidanceAction` | actor, phase, cueKey, text, priority, 심각도 및 안정화 상태 |
 | `CaptureResult` | 촬영 Blob, 시간, MatchSnapshot, Review 진단(라우트 간 일시 유지) |
 
-타입 구현은 `src/types/`가 최종 기준이다. 실시간 일치 판정에 0~100 점수를 강제하지 않는다. **진단용 품질 점수**는 `PostCaptureDiagnosis`의 별도 출력으로 둘 수 있다.
+타입 구현은 `src/types/`가 최종 기준이다. Pose/Landmark/Composition 데이터는 `pose.ts`, Reference 계약은 `reference.ts`, 비교 결과와 안내는 `matching.ts`, 촬영 모드와 결과는 `capture.ts`에 둔다. 기존 `pose.ts`의 비교·촬영 타입 import는 호환성을 위해 재내보내기로 유지한다. 실시간 일치 판정에 0~100 점수를 강제하지 않는다. **진단용 품질 점수**는 `PostCaptureDiagnosis`의 별도 출력으로 둘 수 있다.
 
 ## 8. 실시간 분석 및 Guidance 파이프라인
 

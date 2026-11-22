@@ -13,10 +13,6 @@ export interface PoseData {
   timestamp?: number;
 }
 
-export type CaptureMode =
-  | "pose"
-  | "full-composition";
-
 export interface CompositionData {
   centerX: number;
   centerY: number;
@@ -24,26 +20,11 @@ export interface CompositionData {
   height: number;
 }
 
-export interface PoseMatchResult {
-  matched: boolean;
-  jointErrors: Record<string, number>;
-}
-
-export interface CompositionMatchResult {
-  matched: boolean;
-  positionError: number;
-  sizeError: number;
-}
-
-export interface MatchResult {
-  pose: PoseMatchResult;
-  composition?: CompositionMatchResult;
-}
-
-export interface GuidanceCue {
-  type: "pose" | "composition";
-  target: string;
-  message: string;
-  priority: number;
-}
-
+// 기존 import 경로와의 호환성을 유지합니다. 새 코드는 역할별 모듈을 사용합니다.
+export type { CaptureMode } from "./capture";
+export type {
+  PoseMatchResult,
+  CompositionMatchResult,
+  MatchResult,
+  GuidanceCue,
+} from "./matching";

@@ -39,3 +39,16 @@ OpenCV 역시 필수 기술이 아니며 필요성이 확인될 경우 OpenCV.js
 GitHub Issue → 작업 Branch → 개발 → 실행/테스트 → Commit → Pull Request → Review → main
 
 특정 AI Coding Agent에 종속하지 않으며, 사람과 Agent 모두 GitHub의 코드와 문서를 공통 기준으로 사용합니다.
+
+## 디렉터리 구성
+
+- `public/models`, `public/references`: MediaPipe 모델과 기본 레퍼런스 이미지
+- `src/app`: `/` Reference Library, `/camera`, `/review`, `/gallery`, `/share/[token]` 라우팅
+- `src/components`: 기능에 종속되지 않는 공통 UI와 레이아웃
+- `src/features`: 기능별 UI·로직과 라우트 간 촬영 세션
+- `src/lib`: MediaPipe, Supabase, 로컬 저장소 연동
+- `src/types`: Pose, Reference, Matching, Capture 공통 계약
+- `supabase/migrations`: DB 스키마 변경
+- `tests`: 테스트
+
+전체 파일 배치와 모듈 경계는 [시스템 아키텍처](docs/ARCHITECTURE.md#5-디렉터리-및-모듈-경계)를 참고합니다. 현재 미구현 기능은 빈 모듈과 안내 화면으로 위치만 준비되어 있습니다.
